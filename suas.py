@@ -53,7 +53,7 @@ def read_obstacle(obstacle_file):
 		obstacle.append([longi,lati,rad])
 
 read_waypoint(waypoint_file)
-#print ("waypoint = ", waypoint)
+print ("initial", waypoint)
 read_obstacle(obstacle_file)
 #print ("obstacle = ",obstacle)
 
@@ -97,7 +97,7 @@ def distance(p1,p2,co):
 	return (num/den)
 
 def main():
-	print (waypoint)
+	#print (waypoint)
 	for i in range(len(waypoint)):
 		if (i == 0):
 			waypoint_final.append(waypoint[i])
@@ -129,13 +129,13 @@ def main():
 						waypoint_final.append(intersection)
 						#print ("naya daala")
 				waypoint_final.append(waypoint[i])
-	print (waypoint_final)
+	#print (waypoint_final)
 	for k in range(len(waypoint_final)):
 		cx = waypoint_final[i][0]
 		cy = waypoint_final[i][1]
 		lat, lng = translatexy2ll(cx,cy)
 		waypoint_final_.append([lng,lat])
-	#print (waypoint_final_)
+	print ("final",waypoint_final_)
 	
 	######################################################################
 	final_wp_file = "./new_waypoint.txt"
