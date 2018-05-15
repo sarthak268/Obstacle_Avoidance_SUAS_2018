@@ -1,4 +1,6 @@
 import math
+from sympy.solvers import solve
+from sympy import Symbol
 
 def distance(x1,y1,x2,y2):
 	return math.sqrt((x1-x2)**2 + (y1-y2)**2)
@@ -12,34 +14,33 @@ def find_point(p1, p2, r, oc):
 	y0 = oc[1]
 	
 	# solution 1
-	a1 = (p*q - r*math.sqrt(p**2 + q**2 - r**2)) / r**2 - p**2
-	b1 = 1
-	c1 = -y0 + (((p + x0)*(-p*q + r*math.sqrt(p**2 + q**2 - r**2))) / r**2 - p**2) - q
+	cons11 = (p*q + r*(math.sqrt(p**2 + q**2 -r**2))) / (r**2 - p**2)
+	cons12 = (p*q - r*(math.sqrt(p**2 + q**2 -r**2))) / (r**2 - p**2)
+	cons21 = (a*b + r*(math.sqrt(a**2 + b**2 -r**2))) / (r**2 - a**2) 
+	cons22 = (a*b - r*(math.sqrt(a**2 + b**2 -r**2))) / (r**2 - a**2)
+
+	x = Symbol('x')
+	a1 = -(cons11)*(x-x0-p) + q + y0
+	a2 = -(cons12)*(x-x0-p) + q + y0
+	b1 = -(cons21)*(x-x0-a) + b + y0
+	b2 = -(cons22)*(x-x0-a) + b + y0
 	
-	a2 = (a*b + r*math.sqrt(a**2 + b**2 - r**2)) / r**2 - a**2
-	b2 = 1
-	c2 = -y0 + (((a + x0)*(-a*b - r*math.sqrt(a**2 + b**2 - r**2))) / r**2 - a**2) - b
+	ans1 = solve(a1,b1)
+	ans2 = solve(a1,b2)
+	ans3 = solve(a2,b1)
+	ans4 = solve(a2,b2)
+	#print("fcgvhb,",ans4)
 
-	sol_x_1 = (c1*b2 - c2*b1) / (a1*b2 - a2*b1)
-	sol_y_1 = (c2*a1 - c1*a2) / (a1*b2 - a2*b1)
+	d1 = distance(p,q,ans1[0],ans1[1])
+	d2 = distance(p,q,ans2[0],ans2[1])
+	d3 = distance(p,q,ans3[0],ans3[1])
+	d4 = distance(p,q,ans4[0],ans4[1])
 
-
-	# solution 2
-	a1_ = (p*q + r*math.sqrt(p**2 + q**2 - r**2)) / r**2 - p**2
-	b1_ = 1
-	c1_ = -y0 + (((p + x0)*(-p*q - r*math.sqrt(p**2 + q**2 - r**2))) / r**2 - p**2) - q
-	
-	a2_ = (a*b - r*math.sqrt(a**2 + b**2 - r**2)) / r**2 - a**2
-	b2_ = 1
-	c2_ = -y0 + (((a + x0)*(-a*b + r*math.sqrt(a**2 + b**2 - r**2))) / r**2 - a**2) - b
-
-	sol_x_2 = (c1_*b2_ - c2_*b1_) / (a1_*b2_ - a2_*b1_)
-	sol_y_2 = (c2_*a1_ - c1_*a2_) / (a1_*b2_ - a2_*b1_)
-
-	dist_1 = distance(sol_x_1,sol_y_1,p,q)
-	dist_2 = distance(sol_x_2,sol_y_2,p,q)
-
-	if (dist_1 < dist_2):
-		return sol_x_1, sol_y_1
-	else :
-		return sol_x_2, sol_y_2
+	if(d1<=min(d2,d3,d4)):
+		return ans1[0], ans1[1]
+	elif(d2<=min(d1,d3,d4)):
+		return ans2[0], ans2[1]
+	elif(d3<=min(d2,d1,d4)):
+		return ans3[0], ans3[1]
+	elif(d4<=min(d2,d3,d1)):
+		return ans4[0], ans4[1]

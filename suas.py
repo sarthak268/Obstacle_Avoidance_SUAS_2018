@@ -1,15 +1,19 @@
 import math
 from tangent import *
+from geotransform import *
 
-safety_distance = 2.5
+safety_distance = 10
 
-waypoint_file = ("./2016-06-17 17-14-00-0.waypoints")
-obstacle_file = ("./obstacle.txt")
+waypoint_file = ("./mission.txt")
+obstacle_file = ("./obstacle")
 
 waypoint = []
 obstacle = []
 waypoint_final = []
 waypoint_final_ = []
+
+def toM(feet):
+	return (0.3048*feet)
 
 def read_waypoint(waypoint_file):
 	waypoint_ = []
@@ -63,44 +67,21 @@ convert(waypoint)
 convert(obstacle)
 
 ########################################################################
-#change to x-y coordinate system
-ref_long = waypoint[0][0]
-ref_lat = waypoint[0][1]
+for i in range(len(waypoint)):
+	cwp = waypoint[i]
+	clong = cwp[0]
+	clat = cwp[1]
+	cx,cy = translatell2xy(clat,clong)
+	waypoint[i] = [cx,cy]
+#print ("old : ",waypoint,"\n")
 
-def toXY_waypoint(arr):
-	longi = arr[0]
-	lat = arr[1]
-	x = (longi - ref_long) * (40075000 / 2*math.pi) * math.cos(ref_lat)
-	y = (lat - ref_lat) * (4007000 / 2*math.pi)
-	return [x,y]
-
-def toXY_obstacle(arr):
-	longi = arr[0]
-	lat = arr[1]
-	r_ = arr[2]
-	x = (longi - ref_long) * (40075000 / 2*math.pi) * math.cos(ref_lat)
-	y = (lat - ref_lat) * (4007000 / 2*math.pi)
-	r = 0.3048 * r_
-	return [x,y,r]
-
-def toGPS(arr):
-	arrr = []
-	for o in range(len(arr)):
-		xn = arr[o][0]
-		yn = arr[o][1]
-		longi = (xn / math.cos(ref_lat)*(40075000.0 / (2.0 * math.pi))) + ref_long
-		lati = (yn / (40007000.0 / (2.0 * math.pi))) + ref_lat
-		arrr.append([longi,lati])
-	return arrr
-
-for k1 in range(len(waypoint)):
-	waypoint[k1] = toXY_waypoint(waypoint[k1])
-
-for k2 in range(len(obstacle)):
-	obstacle[k2] = toXY_obstacle(obstacle[k2])
-
-#print ("waypoint",waypoint)
-#print ("obstacle",obstacle)
+for j in range(len(obstacle)):
+	cobs = obstacle[j]
+	clong = cobs[0]
+	clat = cobs[1]
+	cx, cy = translatell2xy(clat, clong)
+	crad = toM(cobs[2])
+	obstacle[j] = [cx,cy,crad]
 ########################################################################
 
 # obstacle avoidance
@@ -116,6 +97,7 @@ def distance(p1,p2,co):
 	return (num/den)
 
 def main():
+	print (waypoint)
 	for i in range(len(waypoint)):
 		if (i == 0):
 			waypoint_final.append(waypoint[i])
@@ -141,24 +123,31 @@ def main():
 						# finding the point to be added to waypoint file 
 						# using intersection of two tangents from both the 
 						# waypoints.
-						a, b = find_point(waypoint[i-1],waypoint[i],r,[obstacle[l][0], obstacle[l][1]])
+						a, b = find_point(waypoint[i-1],waypoint[i],r + safety_distance,[obstacle[l][0], obstacle[l][1]])
 						##################################################
 						intersection = [a,b]
 						waypoint_final.append(intersection)
 						#print ("naya daala")
 				waypoint_final.append(waypoint[i])
-	waypoint_final_ = toGPS(waypoint_final)
+	print (waypoint_final)
+	for k in range(len(waypoint_final)):
+		cx = waypoint_final[i][0]
+		cy = waypoint_final[i][1]
+		lat, lng = translatexy2ll(cx,cy)
+		waypoint_final_.append([lng,lat])
 	#print (waypoint_final_)
-##########################################################################
-
-def write():
+	
+	######################################################################
 	final_wp_file = "./new_waypoint.txt"
 	file = open(final_wp_file,"w")
+	file.write('QGC' + '\t' + 'WPL' + '\t' + '110' + '\n')
 	for p in range(len(waypoint_final_)):
-		file.write(str(waypoint_final_[p][0]) + " " + str(waypoint_final_[p][1]) + "\n")
+		file.write(str(p) + '\t' + str(0) + '\t' + str(0) + '\t' + str(16) + '\t' + str(0) + '\t' + str(0) + '\t' + str(0) + '\t' + str(0) + '\t' + str(waypoint_final_[p][0]) + '\t' + str(waypoint_final_[p][1]) + '\t' + str(550) + '\t' + str(1) + "\n")
+	file.close()
 
+##########################################################################
 main()
-write()				
+
 
 
 
